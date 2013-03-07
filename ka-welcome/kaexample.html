@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script src="processing-1.4.1.min.js"></script>
+    </head>
+    <body>
+        <h1>Welcome to Computer Science</h1>
+        <p>Exported version of the example found in
+            <a href="http://www.khanacademy.org/cs/welcome-to-computer-science/882454257">Khan Academy</a></p>
+        <canvas id="canvas1"></canvas>
+        <script>
+            function sketchProc(processing) {
+                with (processing) {
+                    width=400;
+                    height=400;
+                    
+                    // This is a comment! You can type anything you want here
+                    // as long as you keep those two slashes in the front :D :D :D
+
+                    // The line below is an instruction to the computer!
+                    // Try commenting it out to see what it does...
+                    noStroke();
+
+                    // Change these numbers to see what each one is for...
+                    fill(255, 255, 0);
+                    ellipse(202, 208, 300, 300);
+
+                    // See if you can figure out what each line of code does!
+                    fill(46, 46, 41);
+                    ellipse(157, 151, 40, 40);
+                    ellipse(304, 142, 40, 40);
+
+                    fill(252, 65, 65);
+                    ellipse(257, 240, 120, 136);
+                }
+            }
+            var canvas = document.getElementById("canvas1");
+            new Processing(canvas, sketchProc);
+        </script>
+    </body>
+</html>
