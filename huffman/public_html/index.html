@@ -19,6 +19,8 @@
                     console.log('Load was performed.');
                     function sketchProc(processing) {
                         with (processing) {
+                            width = 400;
+                            height = 400;
                             eval(data);
                         }
                     }
@@ -27,6 +29,7 @@
                 }, "html");
                 return false;
             };
+            reloadAndRun();
         </script>
         <br/>
         <button onclick="reloadAndRun();">Reload and run</button>
