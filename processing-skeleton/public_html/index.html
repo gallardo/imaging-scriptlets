@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script src="js/libs/processing.js-1.4.1/processing-1.4.1.min.js"></script>
+        <script src="js/libs/jquery-1.9.0/jquery.min.js"></script>
+    </head>
+    <body>
+        <h1>Processing.js Test</h1>
+        <canvas id="canvas_01" width="400" height="400"></canvas>
+        <script>
+            var canvas = document.getElementById("canvas_01");
+            var reloadAndRun = function() {
+                var PROCESSING_JS_FILE = "js/basic-example.js";
+                $.get(PROCESSING_JS_FILE, function(data, textStatus, jqxhr) {
+                    console.log("get.textStatus: " + textStatus);
+                    console.log("jqxhr.status: " + jqxhr.status);
+                    console.log(PROCESSING_JS_FILE + ' successfully loaded.');
+                    function sketchProc(processing) {
+                        with (processing) {
+                            eval(data);
+                        }
+                    }
+                    // attaching the sketchProc function to the canvas
+                    var processingInstance = new Processing(canvas, sketchProc);
+                }, "html");
+                return false;
+            };
+            reloadAndRun();
+        </script>
+        <br/>
+        <button onclick="reloadAndRun();">Reload and run</button>
+    </body>
+</html>
