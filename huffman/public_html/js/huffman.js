@@ -10,27 +10,29 @@
  * @Param s (String) node's textual representation
  * @Param w (Number) node's weight
  */
-var Node = function(s, w) {
-    this.symbol = s;
-    this.weight = w;
-    this.parent = null;
-    this.children = [];
-    this.code = ''; // Will be calculated
-    this.toString = function() {
-        return this.symbol + "/" + this.weight.toPrecision(2) + "/" + this.code;
+function node(s, w) {
+    return {
+        symbol: s,
+        weight: w,
+        parent: null,
+        children: [],
+        code: '', // Will be calculated
+        toString: function() {
+            return this.symbol + "/" + this.weight.toPrecision(2) + "/" + this.code;
+        }
     };
+}
 
-    /**
-     * @param {Node} nodeA
-     * @param {Node} nodeB
-     * @returns {Number} a number lower than 0 if the symbol of nodeA has higher
-     *      probability than the symbol of nodeB; 0 if both symbols have the same
-     *      probability; a number greater than 0 otherwise
-     */
-    var compareNodesDescending = function(nodeA, nodeB) {
-        return nodeB.weight - nodeA.weight;
-    };
-};
+/**
+ * @param {node} nodeA
+ * @param {node} nodeB
+ * @returns {Number} a number lower than 0 if the symbol of nodeA has higher
+ *      probability than the symbol of nodeB; 0 if both symbols have the same
+ *      probability; a number greater than 0 otherwise
+ */
+function compareNodesDescending(nodeA, nodeB) {
+    return nodeB.weight - nodeA.weight;
+}
 
 /**
  *  @class This class implements a Huffman's code construction algorithm. Add
@@ -66,9 +68,9 @@ Huffman = function() {
      * @param {Number} weight
      */
     this.push = function(symbol, weight) {
-        var node = new Node(symbol, weight);
-        this.priorityQueue.push(node);
-        this.nodes.push(node);
+        var n = node(symbol, weight);
+        this.priorityQueue.push(n);
+        this.nodes.push(n);
     };
 
     /**
@@ -85,12 +87,12 @@ Huffman = function() {
      * @pre priorityQueue has at least two nodes
      */
     this.popTwiceAndPush = function() {
-        // nodeA is more probable than nodeB
+// nodeA is more probable than nodeB
         nodeB = this.priorityQueue.pop();
         nodeA = this.priorityQueue.pop();
         console.log("poping the two nodes with lowest probability {"
                 + nodeA + "} and {" + nodeB + "}");
-        parent = new Node(nodeA.symbol + nodeB.symbol, nodeA.weight + nodeB.weight);
+        parent = node(nodeA.symbol + nodeB.symbol, nodeA.weight + nodeB.weight);
         nodeA.parent = parent;
         nodeB.parent = parent;
         parent.children = [nodeA, nodeB];
