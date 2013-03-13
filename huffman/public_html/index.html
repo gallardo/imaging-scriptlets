@@ -5,32 +5,189 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <script src="js/libs/processing.js-1.4.1/processing-1.4.1.js"></script>
         <script src="js/libs/jquery-1.9.0/jquery.min.js"></script>
+        <style type="text/css">
+            textarea, table {
+                /* rounded corners */
+                -moz-border-radius: 10px;
+                -webkit-border-radius: 10px;
+                border-radius: 10px;
+
+                /* add gradient */
+                background-color: #808080;
+                background: -webkit-gradient(linear, left top, left bottom, from(#606060), to(#808080));
+                background: -moz-linear-gradient(top, #606060, #808080); 
+
+                /* add box shadows */
+                -moz-box-shadow: 5px 5px 10px rgba(0,0,0,0.3);
+                -webkit-box-shadow: 5px 5px 10px rgba(0,0,0,0.3);
+                box-shadow: 5px 5px 10px rgba(0,0,0,0.3); 
+            }
+        </style>
+
+        <script src="js/huffman.js"></script>
+        <script>
+            /**
+             * Implements an array that holds the symbol-weight pairs. After
+             * having counted the occurences of the tokens (@link #incrementOccurrences)
+             * it is neccessary to build the array (@link recalculateArray)
+             * @type Array
+             */
+            var Tokens = function() {
+                this.array;
+
+                /** Prefix of the class members holding the tokens */
+                this.PREFIX_TOKEN_MEMBERS = "token_";
+
+                /**
+                 * Increments the number of ocurrences of a token
+                 * @param {Object} item name of the token. The item name will
+                 *      be obtained by its <tt>toString</tt> method
+                 */
+                this.incrementOccurences = function(item) {
+                    var memberName = this.PREFIX_TOKEN_MEMBERS + item;
+                    if (this[memberName] === undefined) {
+                        this[memberName] = ['' + item, 1];
+                        this[memberName].toString = function() {
+                            return this[0] + '/' + this[1];
+                        };
+                    } else {
+                        this[memberName][1]++;
+                    }
+                };
+                this.recalculateArray = function() {
+                    this.array = new Array();
+                    var i = 0;
+                    for (var memberName in this) {
+                        if (!memberName.match('^' + this.PREFIX_TOKEN_MEMBERS))
+                            continue;
+                        this.array[i] = this[memberName];
+                        i++;
+                    }
+                };
+                this.toString = function() {
+                    this.recalculateArray();
+                    return this.array.join(',');
+                };
+            };
+            
+            var toBinUnicode = function(text) {
+                var unicode = '';
+                for (var i = 0; i < text.length; i++) {
+                    if (i > 0) {
+                        unicode += ' ';
+                    }
+                    unicode += parseInt(text.charCodeAt(i)).toString(2);
+                }
+                return unicode;
+            }
+
+            $(function() {
+                var textToCodeTextarea = $('#textToCode');
+                var alphabetTextarea = $('#alphabet');
+                var summaryTable = $('#summary');
+
+                // Model
+                var textToCode;
+                var tokens;
+                var huffman;
+
+                // TODO: this belongs to the controller
+                textToCodeTextarea.keyup(function() {
+                    synchronizeModel();
+                });
+
+                // Synchronize the model and asks the view to redraw everything
+                synchronizeModel = function() {
+                    textToCode = textToCodeTextarea[0].value;
+                    var splittedText = textToCode.split('');
+                    tokens = new Tokens();
+                    for (var i = 0; i < splittedText.length; i++) {
+                        tokens.incrementOccurences(splittedText[i]);
+                    }
+                    tokens.recalculateArray();
+                    huffman = new Huffman();
+                    for (var i = 0; i < tokens.array.length; i++) {
+                        huffman.push(tokens.array[i][0], tokens.array[i][1]);
+                    }
+                    huffman.calculate();
+
+                    updateView();
+                };
+
+                updateView = function() {
+                    alphabetTextarea[0].value = "" + tokens;
+
+                    summaryTable.find("tbody").detach();
+                    summaryTable.append("<tbody></tbody>");
+                    for (var i = 0; i < huffman.nodes.length; i++) {
+                        summaryTable.append(
+                                $('<tr></tr>')
+                                .append($('<td>' + huffman.nodes[i].symbol + '</td>'))
+                                .append($('<td>' + huffman.nodes[i].weight + '</td>'))
+                                .append($('<td>' + huffman.nodes[i].code + '</td>'))
+                                .append($('<td>' + toBinUnicode(huffman.nodes[i].symbol) + '</td>'))
+                                );
+                    }
+                };
+
+                synchronizeModel();
+            });
+        </script>
     </head>
     <body>
-        <h1>Processing.js Test</h1>
+        <h1>Huffman code</h1>
+        <div>
+            <p>Text to code</p>
+            <textarea id="textToCode">asdfaaa</textarea>
+
+            <p>Alphabet</p>
+            <textarea id="alphabet"></textarea>
+
+            <p>Code</p>
+            <table id="summary" border="1">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Weight</th>
+                        <th>Huffman's Code</th>
+                        <th>UTF-8</th>
+                    </tr>
+                </thead>
+            </table>
+
+            <div>
+                <p>Text coded using Huffman's code</p>
+                <textarea></textarea>
+                <p>Text coded using UTF-8</p>
+                <textarea></textarea>
+            </div>
+
+        </div>
         <canvas id="canvas1" width="400" height="400"></canvas>
-        <script>
-            var canvas = document.getElementById("canvas1");
-            var reloadAndRun = function() {
-                $.get("js/huffman.js", function(data, textStatus, jqxhr) {
-                    console.log(data);
-                    console.log(textStatus);
-                    console.log(jqxhr.status);
-                    console.log('Load was performed.');
-                    function sketchProc(processing) {
-                        with (processing) {
-                            width = 400;
-                            height = 400;
-                            eval(data);
-                        }
-                    }
-                    // attaching the sketchProc function to the canvas
-                    var processingInstance = new Processing(canvas, sketchProc);
-                }, "html");
-                return false;
-            };
-            reloadAndRun();
-        </script>
+        <div>
+            <script>
+//                var canvas = document.getElementById("canvas1");
+//                var reloadAndRun = function() {
+//                    $.get("js/huffman.js", function(data, textStatus, jqxhr) {
+//                        console.log(data);
+//                        console.log(textStatus);
+//                        console.log(jqxhr.status);
+//                        console.log('Load was performed.');
+//                        function sketchProc(processing) {
+//                            with (processing) {
+//                                width = 400;
+//                                height = 400;
+//                                eval(data);
+//                            }
+//                        }
+//                        // attaching the sketchProc function to the canvas
+//                        var processingInstance = new Processing(canvas, sketchProc);
+//                    }, "html");
+//                    return false;
+//                };
+//                reloadAndRun();
+            </script>
+        </div>
         <br/>
         <button onclick="reloadAndRun();">Reload and run</button>
     </body>
