@@ -35,34 +35,114 @@ function compareNodesDescending(nodeA, nodeB) {
 }
 
 /**
- *  @class This class implements a Huffman's code construction algorithm. Add
+ * @class This class implements a Huffman's code construction algorithm. Add
  * nodes to this class using @link push(String, Number), @link calculate() the
  * codes and get the result with @link getNodes(). The nodes are instrumented
  * with the corresponding code.
  */
 function huffman() {
-    var that = {
-        priorityQueue: function() {
-            var that = [];
-            /**
-             * For debugging purposes
-             * @returns {String} output format:
-             *  <tt>priorityQueue: [symbol/weight/code]</tt>
-             */
-            that.toString = function() {
-                var result = "priorityQueue: [";
-                for (var i = 0; i < this.length; i++) {
-                    result += this[i];
-                    if (i === this.length - 1) {
-                        return result += "]";
-                    }
-                    result += ", ";
+    var priorityQueue = [];
+    /** Original alphabet */
+    var nodes = [];
+    
+    /**
+     * Sorts the array, so the nodes of highest priority are on the top
+     * (ready to pop)
+     */
+    function sortLeafsNodes() {
+        priorityQueue.sort(Node.compareNodesDescending);
+    }
+
+    /*
+     * Collapse the highest priority nodes into one
+     * @pre priorityQueue should be sorted (lowest probability nodes at the end)
+     * @pre priorityQueue has at least two nodes
+     */
+    function popTwiceAndPush() {
+        // nodeA is more probable than nodeB
+        nodeB = priorityQueue.pop();
+        nodeA = priorityQueue.pop();
+        console.log("poping the two nodes with lowest probability {"
+                + nodeA + "} and {" + nodeB + "}");
+        parent = node(nodeA.symbol + nodeB.symbol, nodeA.weight + nodeB.weight);
+        nodeA.parent = parent;
+        nodeB.parent = parent;
+        parent.children = [nodeA, nodeB];
+        priorityQueue.push(parent);
+        console.log("pushed new node {" + parent + "}");
+    }
+
+    /**
+     * Calculates the binary tree of nodes (see
+     *  http://en.wikipedia.org/wiki/Huffman_coding#Compression)
+     */
+    function calculateTree() {
+        console.log("------");
+        console.log("Step 0");
+        console.log("Original queue: " + priorityQueue);
+        var step = 1;
+        sortLeafsNodes();
+        while (priorityQueue.length > 1) {
+            console.log("------");
+            console.log("Step " + step);
+            console.log("Queue at the beginning of step " + step + ": " + priorityQueue);
+            popTwiceAndPush();
+            sortLeafsNodes();
+            console.log("Queue at the end of step " + step + ": " + priorityQueue);
+            step++;
+        }
+    }
+
+    /**
+     * Walks the root node up to the leafs and assing the leafs a huffman code
+     * @pre the priorityQueue contains only one node: the root of the tree built
+     *      in calculate. @link calculateTree should have been called first
+     */
+    function calculateCodes() {
+        console.log("-------------");
+        console.log("Decoding root");
+        var decodingQueue = [priorityQueue[0]];
+        while (decodingQueue.length > 0) {
+            var parent = decodingQueue.pop();
+            console.log("Poping " + parent);
+            if (parent.children.length === 0) { // leaf node
+                console.log("Removing leaf node: " + parent);
+            } else {
+                var mostFrequent = parent.children[0];
+                var leastFrequent = parent.children[1];
+                console.log("Most frequent symbol: " + mostFrequent);
+                console.log("Least frequent symbol: " + leastFrequent);
+                mostFrequent.code = parent.code + '1';
+                leastFrequent.code = parent.code + '0';
+                decodingQueue.push(leastFrequent, mostFrequent);
+            }
+        }
+    }
+
+    return {
+        getAlphabetLength: function() {
+            return nodes.length;
+        },
+        getSymbolAt: function(i) {
+            return nodes[i].symbol;
+        },
+        getWeightAt: function(i) {
+            return nodes[i].weight;
+        },
+        getCodeAt: function(i) {
+            return nodes[i].code;
+        },
+        getBinUnicodeAt: function(i) {
+            var text = nodes[i].symbol;
+            var unicode = '';
+            for (var i = 0; i < text.length; i++) {
+                if (i > 0) {
+                    unicode += ' ';
                 }
-            };
-            return that;
-        }(),
-        /** Original alphabet */
-        nodes: [],
+                unicode += parseInt(text.charCodeAt(i)).toString(2);
+            }
+            return unicode;
+        },
         /*
          * Add a new symbol
          * @param {String} symbol
@@ -70,83 +150,12 @@ function huffman() {
          */
         push: function(symbol, weight) {
             var n = node(symbol, weight);
-            this.priorityQueue.push(n);
-            this.nodes.push(n);
-        },
-        /**
-         * Sorts the array, so the nodes of highest priority are on the top
-         * (ready to pop)
-         */
-        sortLeafsNodes: function() {
-            this.priorityQueue.sort(Node.compareNodesDescending);
-        },
-        /*
-         * Collapse the highest priority nodes into one
-         * @pre priorityQueue should be sorted (lowest probability nodes at the end)
-         * @pre priorityQueue has at least two nodes
-         */
-        popTwiceAndPush: function() {
-            // nodeA is more probable than nodeB
-            nodeB = this.priorityQueue.pop();
-            nodeA = this.priorityQueue.pop();
-            console.log("poping the two nodes with lowest probability {"
-                    + nodeA + "} and {" + nodeB + "}");
-            parent = node(nodeA.symbol + nodeB.symbol, nodeA.weight + nodeB.weight);
-            nodeA.parent = parent;
-            nodeB.parent = parent;
-            parent.children = [nodeA, nodeB];
-            this.priorityQueue.push(parent);
-            console.log("pushed new node {" + parent + "}");
-        },
-        /**
-         * Calculates the binary tree of nodes (see
-         *  http://en.wikipedia.org/wiki/Huffman_coding#Compression)
-         */
-        calculateTree: function() {
-            console.log("------");
-            console.log("Step 0");
-            console.log("Original queue: " + this.priorityQueue);
-            var step = 1;
-            this.sortLeafsNodes();
-            while (this.priorityQueue.length > 1) {
-                console.log("------");
-                console.log("Step " + step);
-                console.log("Queue at the beginning of step " + step + ": " + this.priorityQueue);
-                this.popTwiceAndPush();
-                this.sortLeafsNodes();
-                console.log("Queue at the end of step " + step + ": " + this.priorityQueue);
-                step++;
-            }
-        },
-        /**
-         * Walks the root node up to the leafs and assing the leafs a huffman code
-         * @pre the priorityQueue contains only one node: the root of the tree built
-         *      in calculate. @link calculateTree should have been called first
-         */
-        calculateCodes: function() {
-            console.log("-------------");
-            console.log("Decoding root");
-            var decodingQueue = [this.priorityQueue[0]];
-            while (decodingQueue.length > 0) {
-                var parent = decodingQueue.pop();
-                console.log("Poping " + parent);
-                if (parent.children.length === 0) { // leaf node
-                    console.log("Removing leaf node: " + parent);
-                } else {
-                    var mostFrequent = parent.children[0];
-                    var leastFrequent = parent.children[1];
-                    console.log("Most frequent symbol: " + mostFrequent);
-                    console.log("Least frequent symbol: " + leastFrequent);
-                    mostFrequent.code = parent.code + '1';
-                    leastFrequent.code = parent.code + '0';
-                    decodingQueue.push(leastFrequent, mostFrequent);
-                }
-            }
+            priorityQueue.push(n);
+            nodes.push(n);
         },
         calculate: function() {
-            this.calculateTree();
-            this.calculateCodes();
+            calculateTree();
+            calculateCodes();
         }
     };
-    return that;
 }

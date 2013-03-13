@@ -70,17 +70,6 @@
                 };
             };
             
-            var toBinUnicode = function(text) {
-                var unicode = '';
-                for (var i = 0; i < text.length; i++) {
-                    if (i > 0) {
-                        unicode += ' ';
-                    }
-                    unicode += parseInt(text.charCodeAt(i)).toString(2);
-                }
-                return unicode;
-            }
-
             $(function() {
                 var textToCodeTextarea = $('#textToCode');
                 var alphabetTextarea = $('#alphabet');
@@ -119,13 +108,13 @@
 
                     summaryTable.find("tbody").detach();
                     summaryTable.append("<tbody></tbody>");
-                    for (var i = 0; i < h.nodes.length; i++) {
+                    for (var i = 0; i < h.getAlphabetLength(); i++) {
                         summaryTable.append(
                                 $('<tr></tr>')
-                                .append($('<td>' + h.nodes[i].symbol + '</td>'))
-                                .append($('<td>' + h.nodes[i].weight + '</td>'))
-                                .append($('<td>' + h.nodes[i].code + '</td>'))
-                                .append($('<td>' + toBinUnicode(h.nodes[i].symbol) + '</td>'))
+                                .append($('<td>' + h.getSymbolAt(i) + '</td>'))
+                                .append($('<td>' + h.getWeightAt(i) + '</td>'))
+                                .append($('<td>' + h.getCodeAt(i) + '</td>'))
+                                .append($('<td>' + h.getBinUnicodeAt(i) + '</td>'))
                                 );
                     }
                 };
