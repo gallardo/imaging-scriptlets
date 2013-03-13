@@ -89,7 +89,7 @@
                 // Model
                 var textToCode;
                 var tokens;
-                var huffman;
+                var h;
 
                 // TODO: this belongs to the controller
                 textToCodeTextarea.keyup(function() {
@@ -105,11 +105,11 @@
                         tokens.incrementOccurences(splittedText[i]);
                     }
                     tokens.recalculateArray();
-                    huffman = new Huffman();
+                    h = huffman();
                     for (var i = 0; i < tokens.array.length; i++) {
-                        huffman.push(tokens.array[i][0], tokens.array[i][1]);
+                        h.push(tokens.array[i][0], tokens.array[i][1]);
                     }
-                    huffman.calculate();
+                    h.calculate();
 
                     updateView();
                 };
@@ -119,13 +119,13 @@
 
                     summaryTable.find("tbody").detach();
                     summaryTable.append("<tbody></tbody>");
-                    for (var i = 0; i < huffman.nodes.length; i++) {
+                    for (var i = 0; i < h.nodes.length; i++) {
                         summaryTable.append(
                                 $('<tr></tr>')
-                                .append($('<td>' + huffman.nodes[i].symbol + '</td>'))
-                                .append($('<td>' + huffman.nodes[i].weight + '</td>'))
-                                .append($('<td>' + huffman.nodes[i].code + '</td>'))
-                                .append($('<td>' + toBinUnicode(huffman.nodes[i].symbol) + '</td>'))
+                                .append($('<td>' + h.nodes[i].symbol + '</td>'))
+                                .append($('<td>' + h.nodes[i].weight + '</td>'))
+                                .append($('<td>' + h.nodes[i].code + '</td>'))
+                                .append($('<td>' + toBinUnicode(h.nodes[i].symbol) + '</td>'))
                                 );
                     }
                 };
