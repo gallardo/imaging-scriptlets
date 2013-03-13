@@ -30,12 +30,7 @@ var Node = function(s, w) {
     var compareNodesDescending = function(nodeA, nodeB) {
         return nodeB.weight - nodeA.weight;
     };
-    
-    
-
 };
-
-
 
 /**
  *  @class This class implements a Huffman's code construction algorithm. Add
