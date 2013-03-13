@@ -1,14 +1,10 @@
 /**
- * This program calculates the Huffman code for a set of symbos and
- * their weights.
- */
-
-/**
- * Represents a node as described in
+ * @class Represents a node as described in
  * http://en.wikipedia.org/wiki/Huffman_coding#Compression
  * 
- * @Param s (String) node's textual representation
- * @Param w (Number) node's weight
+ * @param s (String) node's textual representation
+ * @param w (Number) node's weight
+ * @type node
  */
 function node(s, w) {
     return {
@@ -44,13 +40,13 @@ function huffman() {
     var priorityQueue = [];
     /** Original alphabet */
     var nodes = [];
-    
+
     /**
      * Sorts the array, so the nodes of highest priority are on the top
      * (ready to pop)
      */
     function sortLeafsNodes() {
-        priorityQueue.sort(Node.compareNodesDescending);
+        priorityQueue.sort(compareNodesDescending);
     }
 
     /*
@@ -60,8 +56,8 @@ function huffman() {
      */
     function popTwiceAndPush() {
         // nodeA is more probable than nodeB
-        nodeB = priorityQueue.pop();
-        nodeA = priorityQueue.pop();
+        var nodeB = priorityQueue.pop();
+        var nodeA = priorityQueue.pop();
         console.log("poping the two nodes with lowest probability {"
                 + nodeA + "} and {" + nodeB + "}");
         parent = node(nodeA.symbol + nodeB.symbol, nodeA.weight + nodeB.weight);
@@ -143,7 +139,7 @@ function huffman() {
             }
             return unicode;
         },
-        /*
+        /**
          * Add a new symbol
          * @param {String} symbol
          * @param {Number} weight
@@ -153,6 +149,7 @@ function huffman() {
             priorityQueue.push(n);
             nodes.push(n);
         },
+        /** Calculates the Huffman tree and the code for each symbol */
         calculate: function() {
             calculateTree();
             calculateCodes();
