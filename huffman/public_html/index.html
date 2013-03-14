@@ -11,13 +11,14 @@
         <script src="js/huffman.js"></script>
         <style>
             textarea.six-lines-high {
-                height: 6em;
+                height: 12em;
             }
-            tbody {
-                height: 10.5em;
-                
+            .scrollable {
+                margin-right: auto;
+                max-height: 25.5em;
+                /*width: 90%;*/
+
                 /* Show scrollbar */
-                display: block;
                 overflow-y: auto;
             }
         </style>
@@ -138,29 +139,31 @@
             </div>
             <div data-role="content">
                 <div data-role="collapsible" data-collapsed="false">
-                    <h2>Input text</h2>
+                    <h2 id="Input_text">Input text</h2>
                     <form>
                         <textarea id="textToCode">Strange women lying in ponds distributing swords is no basis for a system of government</textarea>
                     </form>
                 </div><!-- /collapsible -->
                 <div data-role="collapsible" data-collapsed="false">
-                    <h2>Codes</h2>
-                    <div class="ui-grid-a">
+                    <h2 id="Codes">Codes</h2>
+                    <div class="ui-grid-a ui-responsive">
                         <div class="ui-block-a">
-                            <table id="summary" data-role="table" class="ui-responsive table-stroke">
-                                <thead>
-                                    <tr><th colspan="4">Auto-generated codes</th></tr>
-                                    <tr>
-                                        <th>Symbol</th>
-                                        <th>Weight</th>
-                                        <th>Huffman's Code</th>
-                                        <th>UTF-8</th>
-                                    </tr>
-                                </thead>
-                            </table>
+                            <div class="scrollable">
+                                <table id="summary" data-role="table" class="ui-responsive table-stripe">
+                                    <thead>
+                                        <tr><th colspan="4">Auto-generated codes</th></tr>
+                                        <tr>
+                                            <th>Symbol</th>
+                                            <th>Weight</th>
+                                            <th>Huffman's Code</th>
+                                            <th>UTF-8</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
                         </div><!-- / ui-block-a -->
                         <div class="ui-block-b">
-                            <table id="customCodes" data-role="table" class="ui-responsive table-stroke">
+                            <table id="customCodes" data-role="table" class="ui-responsive table-stripe">
                                 <thead>
                                     <tr><th colspan="4">Customized codes</th></tr>
                                     <tr>
@@ -170,12 +173,12 @@
                                     </tr>
                                 </thead>
                             </table>
-                        </div><!-- / ui-block-a -->
+                        </div><!-- / ui-block-b -->
                     </div><!-- / ui-grid-a -->
                 </div><!-- /collapsible -->
 
                 <div data-role="collapsible" data-collapsed="false">
-                    <h2>Encoded input text</h2>
+                    <h2 id="Encoded_input_text">Encoded input text</h2>
                     <div class="ui-grid-a">
                         <div class="ui-block-a">
                             <h3>Huffman's encoding</h3>
@@ -197,6 +200,9 @@
             <div data-role="panel" data-position-fixed="true" id="nav-panel">
                 <ul data-role="listview">
                     <li data-icon="delete"><a href="#" data-rel="close">Close menu</a></li>
+                    <li><a href="#Input_text">Input text</a></li>
+                    <li><a href="#Codes">Codes</a></li>
+                    <li><a href="#Encoded_input_text">Encoded input test</a></li>
                 </ul>
             </div><!-- /panel -->
         </div><!-- /page -->
