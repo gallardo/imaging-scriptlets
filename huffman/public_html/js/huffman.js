@@ -1,6 +1,6 @@
 /**
  * @class Represents a node as described in
- * http://en.wikipedia.org/wiki/Huffman_coding#Compression
+ * <a href="http://en.wikipedia.org/wiki/Huffman_coding#Compression"/>
  * 
  * @param s (String) node's textual representation
  * @param w (Number) node's weight
@@ -32,15 +32,17 @@ function compareNodesDescending(nodeA, nodeB) {
 
 /**
  * @class This class implements a Huffman's code construction algorithm. Add
- * nodes to this class using @link push(String, Number), @link calculate() the
- * codes and get the result with @link getNodes(). The nodes are instrumented
- * with the corresponding code.
+ * nodes to this class using {@link push(String, Number)}, {@link calculate()}
+ * the codes and get the result with {@link getNodes()}. The nodes are
+ * instrumented with the corresponding code.
  */
 function huffman() {
     var priorityQueue = [];
     /** Original alphabet */
     var nodes = [];
-
+    /** Map of symbols to nodes for optimazed accessibility. Calculated in
+     *  {@link calculateCodes()}. */
+    var codes = [];
     /**
      * Sorts the array, so the nodes of highest priority are on the top
      * (ready to pop)
@@ -92,7 +94,7 @@ function huffman() {
     /**
      * Walks the root node up to the leafs and assing the leafs a huffman code
      * @pre the priorityQueue contains only one node: the root of the tree built
-     *      in calculate. @link calculateTree should have been called first
+     *      in calculate. {@link calculateTree()} should have been called first
      */
     function calculateCodes() {
         console.log("-------------");
@@ -113,31 +115,30 @@ function huffman() {
                 decodingQueue.push(leastFrequent, mostFrequent);
             }
         }
+        for (var i = 0; i < nodes.length; i++) {
+            codes[nodes[i].symbol] = nodes[i];
+        }
     }
 
     return {
         getAlphabetLength: function() {
             return nodes.length;
         },
-        getSymbolAt: function(i) {
-            return nodes[i].symbol;
+        getSymbolAt: function(index) {
+            return nodes[index].symbol;
         },
-        getWeightAt: function(i) {
-            return nodes[i].weight;
+        getWeightAt: function(index) {
+            return nodes[index].weight;
         },
-        getCodeAt: function(i) {
-            return nodes[i].code;
+        getCodeAt: function(index) {
+            return nodes[index].code;
         },
-        getBinUnicodeAt: function(i) {
-            var text = nodes[i].symbol;
-            var unicode = '';
-            for (var i = 0; i < text.length; i++) {
-                if (i > 0) {
-                    unicode += ' ';
-                }
-                unicode += parseInt(text.charCodeAt(i)).toString(2);
-            }
-            return unicode;
+        /** @param {String} symbol symbol representation */
+        getCodeFor: function(symbol) {
+            return codes[symbol].code;
+        },
+        getBinUnicodeAt: function(index) {
+            return encodeToBinaryUnicode(nodes[index].symbol);
         },
         /**
          * Add a new symbol
@@ -153,6 +154,58 @@ function huffman() {
         calculate: function() {
             calculateTree();
             calculateCodes();
+        },
+        /**
+         * @param {String} text to encode
+         * @param {String} separator the output string uses this separator between the
+         *          original symbols, to help recognize them.
+         * @returns {String} the encoded input text using the calculated
+         *       Huffman's code
+         */
+        encode: function(text, separator) {
+            var encodingMap = {};
+            nodes.forEach(function(n) {
+                encodingMap[n.symbol] = n.code;
+            });
+            console.log("Encoding text: '" + text + "'");
+            return customEncoding(text, encodingMap, separator);
         }
     };
+}
+
+/**
+ * @param {String} text text to encode
+ * @param {String} separator the output string uses this separator between the
+ *          original symbols, to help recognize them.
+ * @returns {String} binary representation of the unicode text representation
+ */
+function encodeToBinaryUnicode(text, separator) {
+    var unicode = '';
+    var s = (separator === undefined) ? ' ' : separator;
+    for (var i = 0; i < text.length; i++) {
+        if (i > 0) {
+            unicode += s;
+        }
+        unicode += parseInt(text.charCodeAt(i)).toString(2);
+    }
+    return unicode;
+}
+
+/**
+ * @param {String} text text to encode
+ * @param {Object} encodingMap symbol to code mapping
+ * @param {String} separator the output string uses this separator between the
+ *          original symbols, to help recognize them.
+ * @returns {String} custom encoding of text
+ */
+function customEncoding(text, encodingMap, separator) {
+    var encodedText = '';
+    var s = (separator === undefined) ? ' ' : separator;
+    for (var i = 0; i < text.length; i++) {
+        if (i > 0) {
+            encodedText += s;
+        }
+        encodedText += encodingMap[text.charAt(i)];
+    }
+    return encodedText;
 }

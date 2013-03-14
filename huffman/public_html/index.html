@@ -13,9 +13,9 @@
                 border-radius: 10px;
 
                 /* add gradient */
-                background-color: #808080;
-                background: -webkit-gradient(linear, left top, left bottom, from(#606060), to(#808080));
-                background: -moz-linear-gradient(top, #606060, #808080); 
+                background-color: #b0b0b0;
+                background: -webkit-gradient(linear, left top, left bottom, from(#808080), to(#b0b0b0));
+                background: -moz-linear-gradient(top, #808080, #b0b0b0); 
 
                 /* add box shadows */
                 -moz-box-shadow: 5px 5px 10px rgba(0,0,0,0.3);
@@ -69,11 +69,15 @@
                     return this.array.join(',');
                 };
             };
-            
+
             $(function() {
+                // View
                 var textToCodeTextarea = $('#textToCode');
-                var alphabetTextarea = $('#alphabet');
                 var summaryTable = $('#summary');
+                var huffmanEncodedTextTextarea = $('#huffmanEncodedText');
+                var huffmanEncodedTextLengthSpan = $('#huffmanEncodedTextLength');
+                var utf8EncodedTextTextarea = $('#utf8EncodedText');
+                var utf8EncodedTextLengthSpan = $('#utf8EncodedTextLength');
 
                 // Model
                 var textToCode;
@@ -104,8 +108,6 @@
                 };
 
                 updateView = function() {
-                    alphabetTextarea[0].value = "" + tokens;
-
                     summaryTable.find("tbody").detach();
                     summaryTable.append("<tbody></tbody>");
                     for (var i = 0; i < h.getAlphabetLength(); i++) {
@@ -117,6 +119,15 @@
                                 .append($('<td>' + h.getBinUnicodeAt(i) + '</td>'))
                                 );
                     }
+
+                    huffmanEncodedTextTextarea[0].value = ""
+                            + h.encode(textToCodeTextarea[0].value);
+                    huffmanEncodedTextLengthSpan.html("<b>"
+                            + h.encode(textToCodeTextarea[0].value, '').length + "</b>");
+                    utf8EncodedTextTextarea[0].value = ""
+                            + encodeToBinaryUnicode(textToCodeTextarea[0].value);
+                    utf8EncodedTextLengthSpan.html("<b>"
+                            + encodeToBinaryUnicode(textToCodeTextarea[0].value, '').length + "</b>");
                 };
 
                 synchronizeModel();
@@ -126,30 +137,37 @@
     <body>
         <h1>Huffman code</h1>
         <div>
-            <p>Text to code</p>
+            <h2>Input text</h2>
             <textarea id="textToCode">asdfaaa</textarea>
 
-            <p>Alphabet</p>
-            <textarea id="alphabet"></textarea>
-
-            <p>Code</p>
-            <table id="summary" border="1">
-                <thead>
-                    <tr>
-                        <th>Symbol</th>
-                        <th>Weight</th>
-                        <th>Huffman's Code</th>
-                        <th>UTF-8</th>
-                    </tr>
-                </thead>
-            </table>
+            <h2>Codes</h2>
+            <div>
+                <table id="summary">
+                    <thead>
+                        <tr><th colspan="4">Auto-generated</th></tr>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Weight</th>
+                            <th>Huffman's Code</th>
+                            <th>UTF-8</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
 
             <div>
-                <p>Text coded using Huffman's code</p>
-                <textarea></textarea>
+                <h2>Encodings</h2>
+                <div>
+                    <h3>Huffman's encoding</h3>
+                    <textarea id="huffmanEncodedText" disabled="true"></textarea>
+                    <p>Length: <span id="huffmanEncodedTextLength"></span></p>
+                </div>
+                <div>
+                    <h3>UTF-8 encoding</h3>
+                    <textarea id="utf8EncodedText" disabled="true"></textarea>
+                    <p>Length: <span id="utf8EncodedTextLength"></span></p>
+                </div>
             </div>
         </div>
-        <br/>
-        <button onclick="reloadAndRun();">Reload and run</button>
     </body>
 </html>
