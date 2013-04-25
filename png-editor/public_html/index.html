@@ -73,21 +73,7 @@
                     </form>
                 </div>
 
-                <div id="PNGEditorDiv">
-                    <form name="image0-form">
-                        <div>
-                            <header>File signature</header>
-                            <label>Signature</label><input name="signature-textarea" type="text" size="24" readonly="readonly"/>
-                        </div>
-                        <div>
-                            <header>Chunk 0</header>
-                            <label>Length</label><input name="chunk-0-length-textarea" type="text" size="12" /><input name="chunk-0-length-ascii-textarea" type="text" size="4" />
-                            <label>Type/Name</label><input name="chunk-0-type-textarea" type="text" size="12" /><input name="chunk-0-type-ascii-textarea" type="text" size="4" />
-                            <label>Data</label><textarea name="chunk-0-data-textarea" rows="4" cols="50"></textarea>
-                            <label>CRC</label><input name="chunk-0-crc-textarea" type="text" size="12" /><input name="chunk-0-crc-ascii-textarea" type="text" size="4" />
-                        </div>
-                    </form>
-                </div>
+                <div id="PNGEditorDiv"></div>
 
                 <div id="EditedImageDiv">
                     <img id="edited-image-img" alt="Edited Image" name="EditedImageImg" width="100" height="100" src="" />
@@ -188,27 +174,48 @@
             }
 
             /**
-             * 
              * @param {ByteArray} bytes
              * @param {Number} ptr pointer to the start of the chunk in the
              *       byte array
              */
             function Chunk(bytes, ptr) {
                 var _ptr = ptr;
+                var _lengthHex = batohexs(bytes.subarray(_ptr, _ptr + 4));
                 var _length = batoi(bytes.subarray(_ptr, _ptr + 4));
                 _ptr += 4;
+                var _nameHex = batohexs(bytes.subarray(_ptr, _ptr + 4));
                 var _name = batos(bytes.subarray(_ptr, _ptr + 4));
                 _ptr += 4;
+                var _dataHex = batohexs(bytes.subarray(_ptr, _ptr + _length));
                 var _data = bytes.subarray(_ptr, _ptr + _length);
                 _ptr += _length;
+                var _crcHex = batohexs(bytes.subarray(_ptr, _ptr + 4));
                 var _crc = batoi(bytes.subarray(_ptr, _ptr + 4));
                 _ptr += 4;
 
                 /**
-                 * @returns {Number}
+                 * @returns {String}
+                 */
+                this.getLengthHex = function() {
+                    return _lengthHex;
+                };
+                /**
+                 * @returns {String}
+                 */
+                this.getLengthDec = function() {
+                    return '' + _length;
+                };
+                /**
+                 * @returns {Number} chunk's length
                  */
                 this.getLength = function() {
-                    return _length;
+                    return _length + 4 + 4 + 4; // length + name + crc
+                };
+                /**
+                 * @returns {String}
+                 */
+                this.getNameHex = function() {
+                    return _nameHex;
                 };
                 /**
                  * @returns {String}
@@ -217,10 +224,22 @@
                     return _name;
                 };
                 /**
+                 * @returns {String}
+                 */
+                this.getDataHex = function() {
+                    return _dataHex;
+                };
+                /**
                  * @returns {ByteArray}
                  */
                 this.getData = function() {
                     return _data;
+                };
+                /**
+                 * @returns {String}
+                 */
+                this.getCrcHex = function() {
+                    return _crcHex;
                 };
                 /**
                  * @returns {Number}
@@ -231,23 +250,7 @@
             }
 
             /**
-             * @class This class bounds a chunk GUI editor with the png
-             *  corresponding bytes
-             * @param {Number} chunkIndex which chunk index to attatch to
-             */
-            function ChunkEditor(chunkIndex) {
-                this.chunkIndex = chunkIndex;
-                /**
-                 * 
-                 * @param {ArrayBuffer} data byte array with the chunk data
-                 */
-                this.setData = function(data) {
-                    document.forms['image0-form'].elements['chunk-' + chunkIndex + '-length-textarea'].value = batohexs(data);
-                };
-            }
-
-            /**
-             * 
+             * API to access png data
              * @param {ByteArray} bytes png data
              */
             function PngImage(bytes) {
@@ -257,17 +260,22 @@
                 var _signature = bytes.subarray(0, 8);
                 var _width = batoi(bytes.subarray(WIDTH_PTR, WIDTH_PTR + 4));
                 var _height = batoi(bytes.subarray(HEIGHT_IND, HEIGHT_IND + 4));
-                var _chunks = [];
+                var _chunks = {};
 
                 // pointer to the index in the byte array of the next chunk to read
                 var _ptr = 8;
+                var _nChunks = 0;
 
                 // read chunks
+                console.log('Reading chunks...');
                 while (_ptr < bytes.length) {
                     var c = new Chunk(_bytes, _ptr);
+                    console.log('Read chunk named "' + c.getName() + '" of length ' + c.getLength() + ' bytes.');
                     _chunks[c.getName()] = c;
-                    _ptr += c.length;
+                    _ptr += c.getLength();
+                    ++_nChunks;
                 }
+                console.log(_nChunks + ' chunks read');
 
                 /**
                  * @param {Element} tag where to render the image
@@ -332,29 +340,45 @@
                     return div;
                 };
 
-                var _createChunks = function() {
-                    var div = $('<div><header>Chunk 0</header>');
+                /**
+                 * 
+                 * @param {Chunk} chunk
+                 * @param {Number} index which chunk it is
+                 * @returns {jQuery} GUI element
+                 */
+                var _createChunkGUI = function(chunk, index) {
+                    var div = $('<div><header>Chunk ' + index + ': ' + chunk.getName() + '</header>');
 
+                    var LENGTH_WIDTH = Math.ceil(Math.log(Math.pow(2,32)-1)/Math.log(10)); // Max length
                     // Length
                     div.append($('<label>Length</label>'))
-                            .append($('<input name="chunk-0-length-textarea" type="text" size="12" />'))
-                            .append($('<input name="chunk-0-length-ascii-textarea" type="text" size="4" />'));
+                            .append($('<input name="chunk-0-length-textarea" type="text" size="12" value="' + chunk.getLengthHex() + '"/>'))
+                            .append($('<input name="chunk-0-length-ascii-textarea" type="text" size="' + LENGTH_WIDTH + '" value="' + chunk.getLengthDec() + '"/><sub>bytes</sub>'));
 
                     // Type/Name
                     div.append($('<label>Type/Name</label>'))
-                            .append($('<input name="chunk-0-type-textarea" type="text" size="12" />'))
-                            .append($('<input name="chunk-0-type-ascii-textarea" type="text" size="4" />'));
+                            .append($('<input name="chunk-0-type-textarea" type="text" size="12" value="' + chunk.getNameHex() + '"/>'))
+                            .append($('<input name="chunk-0-type-ascii-textarea" type="text" size="4" value="' + chunk.getName() + '"/><sub>ASCII</sub></label>'));
 
                     // Data
                     div.append($('<label>Data</label>'))
-                            .append($('<textarea name="chunk-0-data-textarea" rows="4" cols="50">'))
-                            .append($('</textarea>'));
-                    
+                            .append($('<textarea name="chunk-0-data-textarea" rows="4" cols="50">' + chunk.getDataHex() + '</textarea>'));
+
                     // CRC
                     div.append($('<label>CRC</label>'))
-                            .append($('<input name="chunk-0-crc-textarea" type="text" size="12" />'))
-                            .append($('<input name="chunk-0-crc-ascii-textarea" type="text" size="4" />'));
-                    
+                            .append($('<input name="chunk-0-crc-textarea" type="text" size="12" value="' + chunk.getCrcHex() + '"/>'))
+                            .append($('<input name="chunk-0-crc-ascii-textarea" type="text" size="10"  value="' + chunk.getCrc() + '"/><sub>dec</sub>'));
+
+                    return div;
+                };
+
+                var _createChunksGUI = function() {
+                    var div = $('<div><div/>');
+                    var names = Object.keys(_pngImage.getChunks());
+                    console.log('chunks:' + names.length);
+                    for (var i = 0; i < names.length; ++i) {
+                        div.append(_createChunkGUI(_pngImage.getChunks()[names[i]], i));
+                    }
                     return div;
                 };
 
@@ -373,20 +397,16 @@
                 };
 
                 this.refresh = function() {
-                    // XXX: Adding html during development. After that, should replace content
-                    $(gUIDiv).append(_element);
-//                    $(gUIDiv).empty().append(_element);
+                    $(gUIDiv).empty().append(_element);
                 };
 
-                var _element = $('<div/>')
+                var _element = $('<div><div/>')
                         .append(_createSignatureGUI())
-                        .append(_createChunks());
+                        .append(_createChunksGUI());
 
 
                 return this;
             }
-
-            var chunkEditor = new ChunkEditor(0);
 
             document.forms['file-form'].elements['image-file'].onchange = function(evt) {
                 if (!window.FileReader)
@@ -403,8 +423,6 @@
                     }
 
                     var pngBytes = new Uint8Array(evt.target.result);
-                    document.forms['image0-form'].elements['signature-textarea'].value = batohexs(pngBytes.subarray(0, 8));
-                    chunkEditor.setData(pngBytes.subarray(9, 28));
                     var pngImage = new PngImage(pngBytes);
 
                     // Render original image
@@ -412,7 +430,7 @@
 
                     // Re-create GUI editor and refresh image
                     new PngEditor($('#PNGEditorDiv')[0], pngImage)
-                            .setImageViewport($('#edited-image-img'))
+                            .setImageViewport($('#edited-image-img')[0])
                             .refresh();
                 };
 
