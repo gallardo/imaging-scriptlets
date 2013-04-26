@@ -76,10 +76,10 @@
                 <div id="PNGEditorDiv"></div>
 
                 <div id="EditedImageDiv">
-                    <img id="edited-image-img" alt="Edited Image" name="EditedImageImg" width="100" height="100" src="" />
+                    <img id="edited-image-img" alt="Edited Image" width="100" height="100" src="" />
                 </div>
                 <div id="OriginalImageDiv">
-                    <img id="original-image-img" alt="Original Image" name="OriginalImageImg" width="100" height="100" src="" />
+                    <img id="original-image-img" alt="Original Image" width="100" height="100" src="" />
                 </div>
             </div>
 
@@ -159,7 +159,6 @@
                 }
                 return btoa(str).replace(/.{76}(?=.)/g, '$&\n');
             }
-            ;
 
             /**
              * @see <a href="http://stackoverflow.com/a/2117523/413020">How to
@@ -174,6 +173,7 @@
             }
 
             /**
+             * @class 
              * @param {ByteArray} bytes
              * @param {Number} ptr pointer to the start of the chunk in the
              *       byte array
@@ -193,64 +193,66 @@
                 var _crc = batoi(bytes.subarray(_ptr, _ptr + 4));
                 _ptr += 4;
 
-                /**
-                 * @returns {String}
-                 */
-                this.getLengthHex = function() {
-                    return _lengthHex;
-                };
-                /**
-                 * @returns {String}
-                 */
-                this.getLengthDec = function() {
-                    return '' + _length;
-                };
-                /**
-                 * @returns {Number} chunk's length
-                 */
-                this.getLength = function() {
-                    return _length + 4 + 4 + 4; // length + name + crc
-                };
-                /**
-                 * @returns {String}
-                 */
-                this.getNameHex = function() {
-                    return _nameHex;
-                };
-                /**
-                 * @returns {String}
-                 */
-                this.getName = function() {
-                    return _name;
-                };
-                /**
-                 * @returns {String}
-                 */
-                this.getDataHex = function() {
-                    return _dataHex;
-                };
-                /**
-                 * @returns {ByteArray}
-                 */
-                this.getData = function() {
-                    return _data;
-                };
-                /**
-                 * @returns {String}
-                 */
-                this.getCrcHex = function() {
-                    return _crcHex;
-                };
-                /**
-                 * @returns {Number}
-                 */
-                this.getCrc = function() {
-                    return _crc;
+                return {
+                    /**
+                     * @returns {String}
+                     */
+                    getLengthHex: function() {
+                        return _lengthHex;
+                    },
+                    /**
+                     * @returns {String}
+                     */
+                    getLengthDec: function() {
+                        return '' + _length;
+                    },
+                    /**
+                     * @returns {Number} chunk's length
+                     */
+                    getLength: function() {
+                        return _length + 4 + 4 + 4; // length + name + crc
+                    },
+                    /**
+                     * @returns {String}
+                     */
+                    getNameHex: function() {
+                        return _nameHex;
+                    },
+                    /**
+                     * @returns {String}
+                     */
+                    getName: function() {
+                        return _name;
+                    },
+                    /**
+                     * @returns {String}
+                     */
+                    getDataHex: function() {
+                        return _dataHex;
+                    },
+                    /**
+                     * @returns {ByteArray}
+                     */
+                    getData: function() {
+                        return _data;
+                    },
+                    /**
+                     * @returns {String}
+                     */
+                    getCrcHex: function() {
+                        return _crcHex;
+                    },
+                    /**
+                     * @returns {Number}
+                     */
+                    getCrc: function() {
+                        return _crc;
+                    }
                 };
             }
 
             /**
-             * API to access png data
+             * @class  API to access png data
              * @param {ByteArray} bytes png data
              */
             function PngImage(bytes) {
@@ -269,7 +271,7 @@
                 // read chunks
                 console.log('Reading chunks...');
                 while (_ptr < bytes.length) {
-                    var c = new Chunk(_bytes, _ptr);
+                    var c = Chunk(_bytes, _ptr);
                     console.log('Read chunk named "' + c.getName() + '" of length ' + c.getLength() + ' bytes.');
                     _chunks[c.getName()] = c;
                     _ptr += c.getLength();
@@ -277,42 +279,40 @@
                 }
                 console.log(_nChunks + ' chunks read');
 
-                /**
-                 * @param {Element} tag where to render the image
-                 */
-                this.renderInImg = function(tag) {
-                    var encodedBytes = batobase64(_bytes);
-                    tag.setAttribute('src', 'data:image/png;base64,' + encodedBytes);
-                    tag.setAttribute('width', '' + this.getWidth());
-                    tag.setAttribute('height', '' + this.getHeight());
-                };
-
-                /**
-                 * @returns {String}
-                 */
-                this.getSignatureHex = function() {
-                    return batohexs(_signature);
-                };
-
-                /**
-                 * @returns {Number}
-                 */
-                this.getWidth = function() {
-                    return _width;
-                };
-
-                /**
-                 * @returns {Number}
-                 */
-                this.getHeight = function() {
-                    return _height;
-                };
-
-                /**
-                 * @returns {Array} map of chunks
-                 */
-                this.getChunks = function() {
-                    return _chunks;
+                return {
+                    /**
+                     * @param {Element} tag where to render the image
+                     */
+                    renderInImg: function(tag) {
+                        var encodedBytes = batobase64(_bytes);
+                        tag.setAttribute('src', 'data:image/png;base64,' + encodedBytes);
+                        tag.setAttribute('width', '' + this.getWidth());
+                        tag.setAttribute('height', '' + this.getHeight());
+                    },
+                    /**
+                     * @returns {String}
+                     */
+                    getSignatureHex: function() {
+                        return batohexs(_signature);
+                    },
+                    /**
+                     * @returns {Number}
+                     */
+                    getWidth: function() {
+                        return _width;
+                    },
+                    /**
+                     * @returns {Number}
+                     */
+                    getHeight: function() {
+                        return _height;
+                    },
+                    /**
+                     * @returns {Array} map of chunks
+                     */
+                    getChunks: function() {
+                        return _chunks;
+                    }
                 };
             }
 
@@ -349,7 +349,7 @@
                 var _createChunkGUI = function(chunk, index) {
                     var div = $('<div><header>Chunk ' + index + ': ' + chunk.getName() + '</header>');
 
-                    var LENGTH_WIDTH = Math.ceil(Math.log(Math.pow(2,32)-1)/Math.log(10)); // Max length
+                    var LENGTH_WIDTH = Math.ceil(Math.log(Math.pow(2, 32) - 1) / Math.log(10)); // Max length
                     // Length
                     div.append($('<label>Length</label>'))
                             .append($('<input name="chunk-0-length-textarea" type="text" size="12" value="' + chunk.getLengthHex() + '"/>'))
@@ -386,26 +386,24 @@
                     _pngImage.renderInImg(_viewportJQuery[0]);
                 };
 
-                /**
-                 * @param {Element} viewportTag
-                 * @return {PngEditor} this for method chaining
-                 */
-                this.setImageViewport = function(viewportTag) {
-                    _viewportJQuery = $(viewportTag);
-                    _redraw();
-                    return this;
-                };
-
-                this.refresh = function() {
-                    $(gUIDiv).empty().append(_element);
-                };
-
                 var _element = $('<div><div/>')
                         .append(_createSignatureGUI())
                         .append(_createChunksGUI());
 
-
-                return this;
+                return {
+                    /**
+                     * @param {Element} viewportTag
+                     * @return {PngEditor} this for method chaining
+                     */
+                    setImageViewport: function(viewportTag) {
+                        _viewportJQuery = $(viewportTag);
+                        _redraw();
+                        return this;
+                    },
+                    refresh: function() {
+                        $(gUIDiv).empty().append(_element);
+                    }
+                };
             }
 
             document.forms['file-form'].elements['image-file'].onchange = function(evt) {
@@ -423,13 +421,13 @@
                     }
 
                     var pngBytes = new Uint8Array(evt.target.result);
-                    var pngImage = new PngImage(pngBytes);
+                    var pngImage = PngImage(pngBytes);
 
                     // Render original image
                     pngImage.renderInImg($('#original-image-img')[0]);
 
                     // Re-create GUI editor and refresh image
-                    new PngEditor($('#PNGEditorDiv')[0], pngImage)
+                    PngEditor($('#PNGEditorDiv')[0], pngImage)
                             .setImageViewport($('#edited-image-img')[0])
                             .refresh();
                 };
