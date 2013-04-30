@@ -144,18 +144,38 @@
             }
 
             /**
-             *  ByteArray to 32 bit integer
-             *  @param {ByteArray} bytes 4 bytes in network order
-             *  @return {Number} 32 bit integer
+             * String with hexadecimal number to ByteArray
+             * @param {String} hexs String containing number in white-spaces
+             *       padded hexadecimal notation
+             * @returns {ByteArray} bytes
              */
-            function batoi(bytes) {
-                var val = 0;
-                for (var i = 0; i < 4; ++i) {
-                    val *= 256;
-                    val += bytes[i];
+            function hexstoba(hexs) {
+                var bytes = [];
+                if (hexs) {
+                    var i = 0; // index in the string
+                    var j = 0; // index in the array
+                    while (i < hexs.length) {
+                        bytes[j++] = parseInt(hexs.substring(i, i + 2), 16);
+                        i += 3;
                     }
-                return val;
                 }
+                return new Uint8Array(bytes);
+            }
+
+// Not needed if using DataView ??
+//            /**
+//             *  ByteArray to 32 bit integer
+//             *  @param {ByteArray} bytes 4 bytes in network order
+//             *  @return {Number} 32 bit integer
+//             */
+//            function batoi(bytes) {
+//                var val = 0;
+//                for (var i = 0; i < 4; ++i) {
+//                    val *= 256;
+//                    val += bytes[i];
+//                }
+//                return val;
+//            }
 
             /**
              *  ByteArray to String interpreting each byte as char codes
@@ -171,6 +191,7 @@
             }
 
             /**
+             * Byte array to base64-encoded string
              * @see <a href="http://stackoverflow.com/a/5370394/413020">Convert
              *      array of byte values to base64 encoded string and break long
              *      lines, Javascript (code golf)</a>
@@ -199,112 +220,149 @@
 
             /**
              * @class 
-             * @param {ByteArray} bytes
-             * @param {Number} ptr pointer to the start of the chunk in the
-             *       byte array
+             * @param {ArrayBuffer} buffer raw image data
+             * @param {Number} start pointer to the start of the chunk in the
+             *       ArrayBuffer
              */
-            function Chunk(bytes, ptr) {
-                var _ptr = ptr;
-                var _lengthHex = batohexs(bytes.subarray(_ptr, _ptr + 4));
-                var _length = batoi(bytes.subarray(_ptr, _ptr + 4));
-                _ptr += 4;
-                var _nameHex = batohexs(bytes.subarray(_ptr, _ptr + 4));
-                var _name = batos(bytes.subarray(_ptr, _ptr + 4));
-                _ptr += 4;
-                var _dataHex = batohexs(bytes.subarray(_ptr, _ptr + _length));
-                var _data = bytes.subarray(_ptr, _ptr + _length);
-                _ptr += _length;
-                var _crcHex = batohexs(bytes.subarray(_ptr, _ptr + 4));
-                var _crc = batoi(bytes.subarray(_ptr, _ptr + 4));
-                _ptr += 4;
-
+            function Chunk(buffer, start) {
+                var _chunkStartPtr = start; // Points to the start of the chunk
+                var _bytes = new Uint8Array(buffer);
+                var _dataView = new DataView(buffer);
+                var _listeners = [];
+                var _notifyListeners = function() {
+                    for (var i = 0; i < _listeners.length; i++) {
+                        _listeners[i]();
+                    }
+                };
+                /**
+                 * @returns {Number} length of data block
+                 */
+                var _getDataLength = function() {
+                    return _dataView.getUint32(_chunkStartPtr);
+                };
                 return {
+                    /**
+                     * @param {function} l listener that will be notified on
+                     *       changes
+                     */
+                    addListener: function(l) {
+                        _listeners.push(l);
+                    },
                     /**
                      * @returns {String}
                      */
                     getLengthHex: function() {
-                        return _lengthHex;
+                        return batohexs(_bytes.subarray(_chunkStartPtr, _chunkStartPtr + 4));
+                    },
+                    /**
+                     * Overwrites the corresponding bytes of the original image.
+                     * Changing the bytes notifies all listeners
+                     * @param {String} hex string containing number in
+                     *       hexadecimal notation
+                     * @returns {Chunk} this for method chaining
+                     */
+                    setLengthHex: function(hex) {
+                        var hexBytes = hexstoba(hex);
+                        var _ptr = _chunkStartPtr;
+                        for (var i = 0; i < hexBytes.length; ++i, ++_ptr) {
+                            _bytes[_ptr] = hexBytes[i];
+                        }
+                        _notifyListeners();
+                        return this;
                     },
                     /**
                      * @returns {String}
                      */
                     getLengthDec: function() {
-                        return '' + _length;
+                        return _dataView.getInt32(_chunkStartPtr);
                     },
                     /**
-                     * @returns {Number} chunk's length
+                     * Overwrites the corresponding bytes of the original image.
+                     * Changing the bytes notifies all listeners
+                     * @param {Number} length length of the chunk in bytes
+                     * @returns {Chunk} this for method chaining
                      */
-                    getLength: function() {
-                        return _length + 4 + 4 + 4; // length + name + crc
+                    setLengthDec: function(length) {
+                        _dataView.setUint32(_chunkStartPtr, length);
+                        _notifyListeners();
+                        return this;
+                    },
+                    /**
+                     * @returns {Number} chunk's length in bytes
+                     */
+                    getChunksLength: function() {
+                        return _getDataLength() + 4 + 4 + 4; // length + name + crc
                     },
                     /**
                      * @returns {String}
                      */
                     getNameHex: function() {
-                        return _nameHex;
+                        return batohexs(_bytes.subarray(_chunkStartPtr + 4, _chunkStartPtr + 8));
                     },
                     /**
                      * @returns {String}
                      */
                     getName: function() {
-                        return _name;
+                        return batos(_bytes.subarray(_chunkStartPtr + 4, _chunkStartPtr + 8));
                     },
                     /**
                      * @returns {String}
                      */
                     getDataHex: function() {
-                        return _dataHex;
-                    },
-                    /**
-                     * @returns {ByteArray}
-                     */
-                    getData: function() {
-                        return _data;
+                        return batohexs(_bytes.subarray(_chunkStartPtr + 8, _chunkStartPtr + 8 + _getDataLength()));
                     },
                     /**
                      * @returns {String}
                      */
                     getCrcHex: function() {
-                        return _crcHex;
+                        return batohexs(_bytes.subarray(_chunkStartPtr + 8 + _getDataLength(), _chunkStartPtr + 8 + _getDataLength() + 4));
                     },
                     /**
                      * @returns {Number}
                      */
                     getCrc: function() {
-                        return _crc;
+                        return _dataView.getInt32(_chunkStartPtr + 8 + _getDataLength());
                     }
                 };
             }
 
             /**
              * @class  API to access png data
-             * @param {ByteArray} bytes png data
+             * @param {ArrayBuffer} buffer raw png data
              */
-            function PngImage(bytes) {
-                var _bytes = bytes;
+            function PngImage(buffer) {
+                var _bytes = new Uint8Array(buffer);
+                var _dataView = new DataView(buffer);
                 var WIDTH_PTR = 8 + 4 + 4; // Signature + IHDR's length + Chunks' name
-                var HEIGHT_IND = WIDTH_PTR + 4;
-                var _signature = bytes.subarray(0, 8);
-                var _width = batoi(bytes.subarray(WIDTH_PTR, WIDTH_PTR + 4));
-                var _height = batoi(bytes.subarray(HEIGHT_IND, HEIGHT_IND + 4));
+                var HEIGHT_PTR = WIDTH_PTR + 4;
+                var _signature = _bytes.subarray(0, 8);
+                var _width = _dataView.getUint32(WIDTH_PTR);
+                var _height = _dataView.getUint32(HEIGHT_PTR);
                 var _chunks = {};
-
+                var _listeners = [];
                 // pointer to the index in the byte array of the next chunk to read
                 var _ptr = 8;
                 var _nChunks = 0;
-
-                // read chunks
-                console.log('Reading chunks...');
-                while (_ptr < bytes.length) {
-                    var c = Chunk(_bytes, _ptr);
-                    console.log('Read chunk named "' + c.getName() + '" of length ' + c.getLength() + ' bytes.');
-                    _chunks[c.getName()] = c;
-                    _ptr += c.getLength();
-                    ++_nChunks;
+                var _that = {
+                    /**
+                     * 
+                     * @param {function} l will be called on image changes
+                     * @returns {PngImage} this for method chaining
+                     */
+                    addListener: function(l) {
+                        _listeners.push(l);
+                        return this;
+                    },
+                    /**
+                     * 
+                     * @returns {PngImage} this for method chaining
+                     */
+                    notifyListeners: function() {
+                        for (var i = 0; i < _listeners.length; ++i) {
+                            _listeners[i]();
                         }
-                console.log(_nChunks + ' chunks read');
-
-                return {
+                        return this;
+                    },
                     /**
                      * @param {Element} tag where to render the image
                      */
@@ -339,7 +397,19 @@
                         return _chunks;
                     }
                 };
+                // read chunks
+                console.log('Reading chunks...');
+                while (_ptr < _bytes.length) {
+                    var c = Chunk(buffer, _ptr);
+                    c.addListener(_that.notifyListeners);
+                    console.log('Read chunk named "' + c.getName() + '" of length ' + c.getChunksLength() + ' bytes.');
+                    _chunks[c.getName()] = c;
+                    _ptr += c.getChunksLength();
+                    ++_nChunks;
                 }
+                console.log(_nChunks + ' chunks read');
+                return _that;
+            }
 
             /**
              * @class Provides the API to create the PNG GUI
@@ -347,7 +417,7 @@
              * @param {PngImage} pngImage
              * @returns {PngEditor} this for method chaining
              */
-            function PngEditor(gUIDiv, pngImage) {
+            function PngGUI(gUIDiv, pngImage) {
                 var _pngImage = pngImage;
                 var _viewportJQuery;
 
@@ -376,9 +446,24 @@
 
                     var LENGTH_WIDTH = Math.ceil(Math.log(Math.pow(2, 32) - 1) / Math.log(10)); // Max length
                     // Length
+                    var lengthHexInput = $('<input name="chunk-0-length-textarea" type="text" size="12" value="' + chunk.getLengthHex() + '"/>');
+                    lengthHexInput.on("change", function() {
+                        chunk.setLengthHex(this.value);
+                    });
+                    chunk.addListener(function() {
+                        lengthHexInput.val(chunk.getLengthHex());
+                    });
+                    console.log("Chunks length: " + chunk.getLengthDec());
+                    var lengthDecInput = $('<input name="chunk-0-length-ascii-textarea" type="text" size="' + LENGTH_WIDTH + '" value="' + chunk.getLengthDec() + '"/><sub>bytes</sub>');
+                    lengthDecInput.on("change", function() {
+                        chunk.setLengthDec(this.value);
+                    });
+                    chunk.addListener(function() {
+                        lengthDecInput.val(chunk.getLengthDec());
+                    });
                     div.append($('<label>Length</label>'))
-                            .append($('<input name="chunk-0-length-textarea" type="text" size="12" value="' + chunk.getLengthHex() + '"/>'))
-                            .append($('<input name="chunk-0-length-ascii-textarea" type="text" size="' + LENGTH_WIDTH + '" value="' + chunk.getLengthDec() + '"/><sub>bytes</sub>'));
+                            .append(lengthHexInput)
+                            .append(lengthDecInput);
 
                     // Type/Name
                     div.append($('<label>Type/Name</label>'))
@@ -410,7 +495,7 @@
                 var _redraw = function() {
                     _pngImage.renderInImg(_viewportJQuery[0]);
                 };
-
+                _pngImage.addListener(_redraw);
                 var _element = $('<div><div/>')
                         .append(_createSignatureGUI())
                         .append(_createChunksGUI());
@@ -480,7 +565,7 @@
                     parseImage(file);
                 }
             }
-            
+
             /**
              * Parses the image file
              * @param {File} file
@@ -499,20 +584,19 @@
                         return;
                     }
 
-                    var pngBytes = new Uint8Array(evt.target.result);
-                    var pngImage = PngImage(pngBytes);
+                    var pngImage = PngImage(evt.target.result);
 
                     // Render original image
                     pngImage.renderInImg($('#original-image-img')[0]);
 
                     // Re-create GUI editor and refresh image
-                    PngEditor($('#PNGEditorDiv')[0], pngImage)
+                    PngGUI($('#PNGEditorDiv')[0], pngImage)
                             .setImageViewport($('#edited-image-img')[0])
                             .refresh();
                 };
 
                 reader.readAsArrayBuffer(file);
-                
+
             }
 
             if (window.File && window.FileList && window.FileReader) {
