@@ -42,6 +42,25 @@
             #PNGEditorDiv textarea {
                 font-family: monospace;
             }
+            #filedrag
+            {
+                display: none;
+                font-weight: bold;
+                text-align: center;
+                padding: 1em 0;
+                margin: 1em 0;
+                color: #555;
+                border: 2px dashed #555;
+                border-radius: 7px;
+                cursor: default;
+            }
+            #filedrag.hover
+            {
+                color: #f00;
+                border-color: #f00;
+                border-style: solid;
+                box-shadow: inset 0 3px 4px #888;
+            }          
         </style>
 
         <!-- Main Stylesheet -->
@@ -69,8 +88,14 @@
                 </nav>
                 <div id="UploadFileDiv">
                     <form name="file-form">
-                        <input type="file" name="image-file" />
+                        <fieldset>
+                            <legend>Png File Upload</legend>
+                            <label for="image-file">Browse file to upload:</label>
+                            <input type="file" id="image-file" name="image-file" multiple=""/>
+                            <div id="file-drag">or drop files here</div>
+                        </fieldset>
                     </form>
+                    <div id="FileUploadStatusDiv"></div>
                 </div>
 
                 <div id="PNGEditorDiv"></div>
@@ -94,7 +119,7 @@
         <!-- JavaScript at the bottom for fast page loading -->
         <!-- Grab Google CDN's jQuery, with a protocol relative URL; fall back to local if necessary -->
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-        <script>window.jQuery || document.write('<script src="js/libs/jquery-1.7.1.min.js"><\/script>')</script>
+        <script>window.jQuery || document.write('<script src="js/libs/jquery-1.7.1.min.js"><\/script>');</script>
 
         <!-- scripts concatenated and minified via ant build script-->
         <script src="js/helper.js"></script>
@@ -128,9 +153,9 @@
                 for (var i = 0; i < 4; ++i) {
                     val *= 256;
                     val += bytes[i];
-                }
+                    }
                 return val;
-            }
+                }
 
             /**
              *  ByteArray to String interpreting each byte as char codes
@@ -276,7 +301,7 @@
                     _chunks[c.getName()] = c;
                     _ptr += c.getLength();
                     ++_nChunks;
-                }
+                        }
                 console.log(_nChunks + ' chunks read');
 
                 return {
@@ -314,7 +339,7 @@
                         return _chunks;
                     }
                 };
-            }
+                }
 
             /**
              * @class Provides the API to create the PNG GUI
@@ -406,7 +431,61 @@
                 };
             }
 
-            document.forms['file-form'].elements['image-file'].onchange = function(evt) {
+            function initDragAndDrop() {
+                var filedrag = $("#file-drag")[0];
+                var fileselect = $("#image-file")[0];
+                // file select
+                fileselect.addEventListener("change", fileSelectHandler, false);
+                // is XHR2 available?
+                var xhr = new XMLHttpRequest();
+                if (xhr.upload) {
+                    // file drop
+                    filedrag.addEventListener("dragover", fileDragHover, false);
+                    filedrag.addEventListener("dragleave", fileDragHover, false);
+                    filedrag.addEventListener("drop", fileSelectHandler, false);
+                    filedrag.style.display = "block";
+                }
+            }
+
+            function fileDragHover(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                e.target.className = (e.type === "dragover" ? "hover" : "");
+            }
+
+            /**
+             * File selection
+             * @param {Event} e
+             */
+            function fileSelectHandler(e) {
+                // cancel event and hover styling
+                fileDragHover(e);
+                // fetch FileList object
+                var files = e.target.files || e.dataTransfer.files;
+                parseFile(files[0]);
+            }
+
+            /**
+             * Output file information
+             * @param {File} file
+             */
+            function parseFile(file) {
+                $("#FileUploadStatusDiv").append($(
+                        "<p>File information: <strong>" + file.name +
+                        "</strong> type: <strong>" + file.type +
+                        "</strong> size: <strong>" + file.size +
+                        "</strong> bytes</p>"
+                        ));
+                if (file.type === "image/png") {
+                    parseImage(file);
+                }
+            }
+            
+            /**
+             * Parses the image file
+             * @param {File} file
+             */
+            function parseImage(file) {
                 if (!window.FileReader)
                     return; // Browser is not compatible
 
@@ -432,8 +511,13 @@
                             .refresh();
                 };
 
-                reader.readAsArrayBuffer(evt.target.files[0]);
-            };
+                reader.readAsArrayBuffer(file);
+                
+            }
+
+            if (window.File && window.FileList && window.FileReader) {
+                initDragAndDrop();
+            }
         </script>
         <!-- end scripts-->
 
