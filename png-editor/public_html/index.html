@@ -60,7 +60,38 @@
                 border-color: #f00;
                 border-style: solid;
                 box-shadow: inset 0 3px 4px #888;
-            }          
+            }
+            /* Sticky footer */
+            html,body {
+                height: 100%;
+                /* The html and body elements cannot have any padding or margin. */
+            }
+
+            /* Wrapper for page content to push down footer */
+            #wrap {
+                min-height: 100%;
+                height: auto !important;
+                height: 100%;
+                /* Negative indent footer by it's height */
+                /* AG 2013-05-10: additional margin is somehow required 79 = 66 + 13 */
+                margin: 0 auto -79px;
+            }
+
+            /* Set the fixe height of the footer here */
+            footer {
+                height: 66px;
+                background-color: #f5f5f5;
+            }
+
+            /* Lastly, apply responsive CSS fixes as necessary */
+            @media (max-width: 767px) {
+                footer {
+                    margin-left: -20px;
+                    margin-right: -20px;
+                    padding-left: 20px;
+                    padding-right: 20px;
+                }
+            }
         </style>
 
         <!-- Bootstrap -->
@@ -76,24 +107,29 @@
     </head>
 
     <body>
-        <header class="hero-unit">
-            <h1>binPNG Editor</h1>
-            <p>A binary PNG editor to learn basic image-processing algorithms and technics</p>
-        </header>
-        <div class="row-fluid">
-            <nav class="span2">
-                <ul class="nav nav-list">
-                    <li class="nav-header">Jump to</li>
-                    <li><a href="#EditedImageDiv">Edited image</a></li>
-                    <li><a href="#OriginalImageDiv">Original image</a></li>
-                    <li><a href="#PNGEditorDiv">PNG editor</a></li>
-                </ul>
-            </nav>
-            <div class="container span9">
-                <div id="main" role="main">
-                    <div class="row-fluid">
-                        <div class="span12" id="FileLoadStatusDiv"></div>
-                        <div class="span12">
+        <div id="wrap">
+            <header class="hero-unit">
+                <h1>binPNG Editor</h1>
+                <p>A binary PNG editor to learn basic image-processing algorithms and technics</p>
+            </header>
+            <div class="container-fluid">
+                <div clas="row-fluid">
+                    <nav class="span2">
+                        <ul class="nav nav-list">
+                            <li class="nav-header">Jump to</li>
+                            <li><a href="#EditedImageDiv">Edited png</a></li>
+                            <li><a href="#OriginalImageDiv">Original png</a></li>
+                            <li><a href="#PNGEditorDiv">PNG editor</a></li>
+                        </ul>
+                    </nav>
+
+                    <div id="main" class="span10" role="main">
+                        <!-- File load status -->
+                        <div class="row">
+                            <div class="span12" id="FileLoadStatusDiv"></div>
+                        </div>
+                        
+                        <div id="ImagesDiv" class="row-fluid">
                             <div id="EditedImageDiv" class="span6">
                                 <h2>Edited image</h2>
                                 <div>
@@ -106,6 +142,7 @@
                                 </div>
                                 <img id="edited-image-img" alt="Edited Image" width="100" height="100" src="" class="img-polaroid" />
                             </div>
+                            
                             <div id="OriginalImageDiv" class="span6">
                                 <h2>Original image</h2>
                                 <div id="LoadFileDiv">
@@ -121,22 +158,21 @@
                                     <img id="original-image-img" alt="Original Image" width="100" height="100" src="" class="img-polaroid" />
                                 </div>
                             </div>
+                        </div><!-- /#ImagesDiv -->
+
+                        <div class="row-fluid">
+                            <div id="PNGEditorDiv"></div>
                         </div>
-                    </div>
-
-                    <div id="PNGEditorDiv"></div>
-
-                </div>
-            </div> <!--! end of #container -->
-
-            <footer id="footer" class="span12">
-                <div>
-                    <hr/>
-                    <p class="text-center"><small>&copy; 2013 ag</small></p>
-                    <p class="text-center"><small><a href="http://glyphicons.com">Glyphicons Free</a> licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.</small></p>
-                </div>
-            </footer>
+                    </div><!-- /#main -->
+                </div> <!-- /.row-fluid -->
+            </div> <!-- /.container-fluid -->
         </div>
+
+        <footer id="footer">
+            <hr/>
+            <p class="text-center"><small>&copy; 2013 ag</small></p>
+            <p class="text-center"><small><a href="http://glyphicons.com">Glyphicons Free</a> licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.</small></p>
+        </footer>
 
         <!-- JavaScript at the bottom for fast page loading -->
         <!-- Grab Google CDN's jQuery, with a protocol relative URL; fall back to local if necessary -->
@@ -152,7 +188,7 @@
         <script>
             $('#image-file-icon').tooltip();
             $('#save-file-icon').tooltip();
-            
+
             /**
              * Byte Array to hexadecimal string
              * @param {ByteArray} bytes
