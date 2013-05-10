@@ -12,7 +12,7 @@
         <!-- Mobile viewport optimization h5bp.com/ad -->
         <meta name="HandheldFriendly" content="True">
         <meta name="MobileOptimized" content="320">
-        <meta name="viewport" content="width=device-width">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
         <!-- Home screen icon  Mathias Bynens mathiasbynens.be/notes/touch-icons -->
         <!-- For iPhone 4 with high-resolution Retina display: -->
@@ -63,68 +63,96 @@
             }          
         </style>
 
+        <!-- Bootstrap -->
+        <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+        <link href="bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet" media="screen">
+
         <!-- Main Stylesheet -->
         <link rel="stylesheet" href="css/style.css">
+        <link rel="stylesheet" href="css/main.css">
 
         <!-- All JavaScript at the bottom, except for Modernizr which enables HTML5 elements & feature detects -->
         <script src="js/libs/modernizr-2.0.6.min.js"></script>
     </head>
 
     <body>
+        <header class="hero-unit">
+            <h1>binPNG Editor</h1>
+            <p>A binary PNG editor to learn basic image-processing algorithms and technics</p>
+        </header>
+        <div class="row-fluid">
+            <nav class="span2">
+                <ul class="nav nav-list">
+                    <li class="nav-header">Jump to</li>
+                    <li><a href="#EditedImageDiv">Edited image</a></li>
+                    <li><a href="#OriginalImageDiv">Original image</a></li>
+                    <li><a href="#PNGEditorDiv">PNG editor</a></li>
+                </ul>
+            </nav>
+            <div class="container span9">
+                <div id="main" role="main">
+                    <div class="row-fluid">
+                        <div class="span12" id="FileLoadStatusDiv"></div>
+                        <div class="span12">
+                            <div id="EditedImageDiv" class="span6">
+                                <h2>Edited image</h2>
+                                <div>
+                                    <form>
+                                        <fieldset>
+                                            <legend class="hidden"></legend>
+                                            <label><i id="save-file-icon" class="icon-download" data-toogle="tooltip" title="Save edited image (not yet available)"></i></label>
+                                        </fieldset>
+                                    </form>
+                                </div>
+                                <img id="edited-image-img" alt="Edited Image" width="100" height="100" src="" class="img-polaroid" />
+                            </div>
+                            <div id="OriginalImageDiv" class="span6">
+                                <h2>Original image</h2>
+                                <div id="LoadFileDiv">
+                                    <form name="file-form">
+                                        <fieldset>
+                                            <legend class="hidden">PNG file</legend>
+                                            <label for="image-file"><i id="image-file-icon" class="icon-folder-open" data-toogle="tooltip" title="Select a file to load"></i></label>
+                                            <span class="hidden"><input type="file" id="image-file" name="image-file" multiple=""/></span>
+                                        </fieldset>
+                                    </form>
+                                </div>
+                                <div id="file-drag">
+                                    <img id="original-image-img" alt="Original Image" width="100" height="100" src="" class="img-polaroid" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-        <div id="container">
-            <header>
-                <h1>PNG-Editor</h1>
+                    <div id="PNGEditorDiv"></div>
 
-            </header>
-            <div id="main" role="main">
-                <nav>
-                    <ul>
-                        <li><a href="#UploadFileDiv">Upload file</a></li>
-                        <li><a href="#PNGEditorDiv">PNG editor</a></li>
-                        <li><a href="#EditedImageDiv">Edited Image</a></li>
-                        <li><a href="#OriginalImageDiv">Original image</a></li>
-                    </ul>
-                </nav>
-                <div id="UploadFileDiv">
-                    <form name="file-form">
-                        <fieldset>
-                            <legend>Png File Upload</legend>
-                            <label for="image-file">Browse file to upload:</label>
-                            <input type="file" id="image-file" name="image-file" multiple=""/>
-                            <div id="file-drag">or drop files here</div>
-                        </fieldset>
-                    </form>
-                    <div id="FileUploadStatusDiv"></div>
                 </div>
+            </div> <!--! end of #container -->
 
-                <div id="PNGEditorDiv"></div>
-
-                <div id="EditedImageDiv">
-                    <img id="edited-image-img" alt="Edited Image" width="100" height="100" src="" />
+            <footer id="footer" class="span12">
+                <div>
+                    <hr/>
+                    <p class="text-center"><small>&copy; 2013 ag</small></p>
+                    <p class="text-center"><small><a href="http://glyphicons.com">Glyphicons Free</a> licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.</small></p>
                 </div>
-                <div id="OriginalImageDiv">
-                    <img id="original-image-img" alt="Original Image" width="100" height="100" src="" />
-                </div>
-            </div>
-
-            <footer>
-                <hr/>
-                <small>&copy; 2013 ag</small>
-
             </footer>
-        </div> <!--! end of #container -->
-
+        </div>
 
         <!-- JavaScript at the bottom for fast page loading -->
         <!-- Grab Google CDN's jQuery, with a protocol relative URL; fall back to local if necessary -->
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
         <script>window.jQuery || document.write('<script src="js/libs/jquery-1.7.1.min.js"><\/script>');</script>
 
+        <!-- Bootstrap -->
+        <script src="bootstrap/js/bootstrap.min.js"></script>
+
         <!-- scripts concatenated and minified via ant build script-->
         <script src="js/helper.js"></script>
         <script src="js/png-editor/base64.js"></script>
         <script>
+            $('#image-file-icon').tooltip();
+            $('#save-file-icon').tooltip();
+            
             /**
              * Byte Array to hexadecimal string
              * @param {ByteArray} bytes
@@ -555,7 +583,7 @@
              * @param {File} file
              */
             function parseFile(file) {
-                $("#FileUploadStatusDiv").append($(
+                $("#FileLoadStatusDiv").append($(
                         "<p>File information: <strong>" + file.name +
                         "</strong> type: <strong>" + file.type +
                         "</strong> size: <strong>" + file.size +
